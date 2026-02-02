@@ -1,0 +1,14 @@
+
+/*
+    Euclidean Rhythm Drum Machine
+    Main Cmajor Patch
+*/
+
+graph Main [[ main ]]
+{
+    output stream float audioOut;
+
+    node oscillator = std::oscillators::Sine (float, 440.0f);
+
+    connection oscillator -> audioOut;
+}
