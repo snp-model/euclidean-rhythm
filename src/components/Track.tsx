@@ -3,6 +3,7 @@ import { euclidean } from '../utils/euclidean';
 import type { TrackConfig } from '../types';
 import './Track.css';
 import { Knob } from './Knob';
+import { Step } from './Step';
 
 interface TrackProps {
   config: TrackConfig;
@@ -60,9 +61,10 @@ export function Track({ config, currentStep, onConfigChange }: TrackProps) {
       </div>
       <div className="track-steps">
         {pattern.map((active, index) => (
-          <div
+          <Step
             key={index}
-            className={`step ${active ? 'active' : ''} ${index === currentStep ? 'current' : ''}`}
+            active={!!active}
+            isCurrent={index === currentStep}
           />
         ))}
       </div>

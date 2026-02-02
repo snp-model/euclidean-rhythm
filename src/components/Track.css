@@ -82,9 +82,10 @@
   aspect-ratio: 1;
   border-radius: 4px;
   background: #111;
-  border: 1px solid #000;
+  border: 2px solid #000;  /* Changed from 1px to 2px to match .current */
   transition: all 0.05s ease;
   overflow: hidden;
+  box-sizing: border-box; /* Ensure border is included in size */
 }
 
 .step.active {
