@@ -43,7 +43,10 @@ export function DrumMachine({ patchConnection }: DrumMachineProps) {
     if (!patchConnection) return;
 
     tracks.forEach((track, index) => {
-      const pattern = euclidean(track.pulses, track.steps, track.rotation);
+      let pattern = euclidean(track.pulses, track.steps, track.rotation);
+      if (track.reversed) {
+        pattern = pattern.reverse();
+      }
       const bitmask = patternToBitmask(pattern);
       if (typeof patchConnection.sendEventOrValue === 'function') {
         patchConnection.sendEventOrValue(`pattern${index}`, bitmask);
