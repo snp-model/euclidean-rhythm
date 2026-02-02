@@ -149,6 +149,7 @@ export function DrumMachine({ patchConnection }: DrumMachineProps) {
             steps: preset.steps,
             pulses: trackPreset.pulses,
             rotation: trackPreset.rotation,
+            reversed: false,
           };
         }
         // Reset other tracks to silence/default, but keep basic config
@@ -157,6 +158,7 @@ export function DrumMachine({ patchConnection }: DrumMachineProps) {
           steps: preset.steps,
           pulses: 0,
           rotation: 0,
+          reversed: false,
         };
       })
     );

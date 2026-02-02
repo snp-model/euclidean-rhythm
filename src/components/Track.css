@@ -61,6 +61,14 @@
   border-color: #ff6600;
 }
 
+.mobile-only {
+  display: none;
+}
+
+.desktop-only {
+  display: flex;
+}
+
 .track-controls {
   display: flex;
   gap: 16px;
@@ -82,10 +90,10 @@
   aspect-ratio: 1;
   border-radius: 4px;
   background: #111;
-  border: 2px solid #000;  /* Changed from 1px to 2px to match .current */
+  border: 2px solid #000;
   transition: all 0.05s ease;
   overflow: hidden;
-  box-sizing: border-box; /* Ensure border is included in size */
+  box-sizing: border-box;
 }
 
 .step.active {
@@ -107,6 +115,14 @@
 }
 
 @media (max-width: 600px) {
+  .mobile-only {
+    display: flex;
+  }
+
+  .desktop-only {
+    display: none;
+  }
+
   .track {
     padding: 10px;
     gap: 8px;
@@ -124,9 +140,11 @@
 
   .track-controls {
     width: 100%;
-    justify-content: space-between;
+    justify-content: flex-start;
     padding-top: 4px;
     transform: none; /* Reset scale for better touch targets */
+    flex-wrap: wrap;
+    gap: 12px;
   }
 
   .track-steps {

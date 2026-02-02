@@ -34,6 +34,13 @@ export function Track({ config, currentStep, onConfigChange }: TrackProps) {
       <div className="track-header">
         <div className="track-info">
           <span className="track-name">{config.name}</span>
+          <button 
+            className={`reverse-toggle mobile-only ${config.reversed ? 'active' : ''}`}
+            onClick={handleReverseToggle}
+            title="Reverse Pattern"
+          >
+            REVERSE
+          </button>
         </div>
         <div className="track-controls">
           <Knob
@@ -51,11 +58,11 @@ export function Track({ config, currentStep, onConfigChange }: TrackProps) {
             onChange={handleRotationChange}
           />
           <button 
-            className={`reverse-toggle ${config.reversed ? 'active' : ''}`}
+            className={`reverse-toggle desktop-only ${config.reversed ? 'active' : ''}`}
             onClick={handleReverseToggle}
             title="Reverse Pattern"
           >
-            REV
+            REVERSE
           </button>
         </div>
       </div>
