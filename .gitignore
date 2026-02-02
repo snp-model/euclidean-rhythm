@@ -9,6 +9,8 @@ lerna-debug.log*
 
 node_modules
 dist
+!src/audio/dist/
+!src/audio/dist/**
 dist-ssr
 *.local
 
