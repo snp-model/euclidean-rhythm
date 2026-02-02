@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://euclidean-drum-machine.serendiproducts.dev/sitemap.xml
