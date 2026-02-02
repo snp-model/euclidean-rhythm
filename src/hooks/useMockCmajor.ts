@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 
 // Mock connection interface
 export interface CmajorPatchConnection {
@@ -21,7 +21,7 @@ export function useMockCmajor() {
       
       // Mock Connection
       const mockConnection: CmajorPatchConnection = {
-        sendParameterValue: (name, value) => {
+        sendParameterValue: (_name, _value) => {
         },
         addEndpointListener: (endpoint, callback) => {
           // Simulate heartbeat or step events if needed
@@ -34,12 +34,12 @@ export function useMockCmajor() {
              (mockConnection as any)._stepInterval = interval;
           }
         },
-        removeEndpointListener: (endpoint, callback) => {
+        removeEndpointListener: (endpoint, _callback) => {
            if (endpoint === 'currentStep' && (mockConnection as any)._stepInterval) {
              clearInterval((mockConnection as any)._stepInterval);
            }
         },
-        connectDefaultAudioAndMIDI: async (ctx) => {
+        connectDefaultAudioAndMIDI: async (_ctx) => {
         },
         close: () => {
         }

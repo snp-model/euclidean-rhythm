@@ -16,7 +16,7 @@ interface UseCmajorOptions {
  * Custom hook for managing Cmajor audio engine connection
  * Uses Vite aliases to import the Cmajor module directly, similar to basic-synthesizer project
  */
-export function useCmajor(options: UseCmajorOptions = {}) {
+export function useCmajor(_options: UseCmajorOptions = {}) {
   const [isLoaded, setIsLoaded] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [audioContext, setAudioContext] = useState<AudioContext | null>(null);
