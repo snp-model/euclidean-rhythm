@@ -168,3 +168,47 @@
   0%, 100% { opacity: 0.5; }
   50% { opacity: 1; }
 }
+
+@media (max-width: 600px) {
+  .drum-machine {
+    padding: 12px;
+  }
+
+  .drum-machine-header h1 {
+    font-size: 1.8rem;
+    margin-bottom: 16px;
+  }
+
+  .global-controls {
+    gap: 16px;
+    flex-direction: row;
+    justify-content: space-between;
+  }
+
+  .play-button {
+    width: 100%;
+    order: -1;
+    margin-bottom: 8px;
+  }
+
+  .tempo-control {
+    flex: 1;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .tempo-control input[type="range"] {
+    width: 100%;
+  }
+
+  .steps-control {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .kit-control {
+    width: 100%;
+    justify-content: center;
+    margin-top: 8px;
+  }
+}

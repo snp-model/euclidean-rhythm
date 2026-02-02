@@ -141,7 +141,7 @@ export function DrumMachine({ patchConnection }: DrumMachineProps) {
             {playing ? '⏹ Stop' : '▶ Play'}
           </button>
           <label className="tempo-control">
-            Tempo:
+            Tempo
             <input
               type="range"
               min="40"
@@ -159,7 +159,7 @@ export function DrumMachine({ patchConnection }: DrumMachineProps) {
             onChange={handleGlobalStepsChange}
           />
           <div className="kit-control">
-            <span className="control-label">Kit:</span>
+            <span className="control-label">Kit</span>
             <div className="kit-buttons">
               <button
                 className={`kit-button ${kitIndex === 0 ? 'active' : ''}`}

@@ -4,7 +4,6 @@ import { useCmajor } from './hooks/useCmajor'
 import { useState } from 'react'
 
 function App() {
-  
   const { isLoaded, patchConnection, initAudio, error } = useCmajor();
   const [started, setStarted] = useState(false);
 
@@ -21,7 +20,6 @@ function App() {
     return (
       <div className="app-container start-screen">
         <h1>Euclidean Rhythm</h1>
-        <p>8トラックのユークリッド・リズム・ドラムマシン</p>
         
         {error && (
           <div style={{ color: 'red', border: '1px solid red', padding: '10px', marginBottom: '20px' }}>
@@ -30,7 +28,7 @@ function App() {
         )}
 
         <button className="start-button" onClick={handleStart}>
-          🎵 Start Audio
+          Start
         </button>
       </div>
     );

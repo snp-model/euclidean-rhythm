@@ -137,3 +137,35 @@
   box-shadow: 0 0 12px rgba(251, 191, 36, 0.6);
   border-color: #fcd34d;
 }
+
+@media (max-width: 600px) {
+  .track {
+    padding: 10px;
+    gap: 8px;
+  }
+
+  .track-header {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .track-info {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .track-controls {
+    width: 100%;
+    justify-content: space-between;
+    padding-top: 4px;
+    transform: none; /* Reset scale for better touch targets */
+  }
+
+  .track-steps {
+    gap: 2px;
+  }
+
+  .step {
+    border-radius: 2px;
+  }
+}
