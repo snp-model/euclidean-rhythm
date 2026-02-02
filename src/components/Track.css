@@ -1,111 +1,138 @@
 .track {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  padding: 12px;
-  background: linear-gradient(135deg, rgba(30, 30, 40, 0.9), rgba(20, 20, 30, 0.9));
-  border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  gap: 10px;
+  padding: 12px 16px;
+  background: rgba(30, 30, 45, 0.6);
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.track:hover {
+  background: rgba(40, 40, 60, 0.7);
+  box-shadow: 0 8px 12px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  transform: translateY(-2px);
 }
 
 .track-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  width: 100%;
+  padding-bottom: 6px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.track-info {
+  display: flex;
+  align-items: center;
   gap: 12px;
 }
 
 .track-name {
-  font-weight: 600;
+  font-weight: 800;
   font-size: 14px;
-  color: #e0e0e0;
-  min-width: 80px;
-}
-
-.track-controls {
-  display: flex;
-  gap: 12px;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-}
-
-.track-controls label {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 12px;
-  color: #888;
-}
-
-.track-controls input {
-  width: 40px;
-  padding: 4px 6px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 6px;
-  background: rgba(0, 0, 0, 0.3);
   color: #fff;
-  font-size: 12px;
-  text-align: center;
-}
-
-.track-controls input:focus {
-  outline: none;
-  border-color: #6366f1;
-  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.3);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
 }
 
 .reverse-toggle {
-  padding: 4px 8px;
+  padding: 0 10px;
+  height: 28px;
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 6px;
   color: #888;
-  font-size: 11px;
-  font-weight: 600;
+  font-size: 10px;
+  font-weight: 700;
   cursor: pointer;
   transition: all 0.2s ease;
-  user-select: none;
   text-transform: uppercase;
+  letter-spacing: 0.05em;
+  display: flex;
+  align-items: center;
 }
 
 .reverse-toggle:hover {
   background: rgba(255, 255, 255, 0.1);
-  color: #ccc;
+  color: #fff;
 }
 
 .reverse-toggle.active {
-  background: linear-gradient(135deg, #4f46e5, #7c3aed);
-  border-color: transparent;
-  color: white;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  background: rgba(99, 102, 241, 0.2);
+  color: #818cf8;
+  border-color: #6366f1;
+  box-shadow: 0 0 12px rgba(99, 102, 241, 0.3);
+}
+
+.track-controls {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  transform: scale(0.9);
+  transform-origin: right center;
 }
 
 .track-steps {
   display: flex;
   gap: 4px;
+  justify-content: space-between;
+  width: 100%;
 }
 
 .step {
-  width: 28px;
-  height: 28px;
-  border-radius: 6px;
-  background: rgba(60, 60, 80, 0.5);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  transition: all 0.1s ease;
+  flex: 1;
+  max-width: 32px;
+  aspect-ratio: 1;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  transition: all 0.15s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.step::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(circle at center, rgba(255,255,255,0.1) 0%, transparent 70%);
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.step:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+  transform: scale(1.05);
 }
 
 .step.active {
-  background: linear-gradient(135deg, #6366f1, #8b5cf6);
-  border-color: rgba(255, 255, 255, 0.3);
-  box-shadow: 0 0 10px rgba(99, 102, 241, 0.4);
+  background: #6366f1;
+  box-shadow: 0 0 10px rgba(99, 102, 241, 0.5);
+  border-color: #818cf8;
+}
+
+.step.active::after {
+  opacity: 1;
 }
 
 .step.current {
-  transform: scale(1.1);
-  box-shadow: 0 0 15px rgba(255, 255, 255, 0.6);
+  border-color: #fff;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.5);
+  z-index: 10;
 }
 
 .step.active.current {
-  background: linear-gradient(135deg, #f59e0b, #ef4444);
-  box-shadow: 0 0 20px rgba(245, 158, 11, 0.8);
+  background: #fbbf24;
+  box-shadow: 0 0 12px rgba(251, 191, 36, 0.6);
+  border-color: #fcd34d;
 }

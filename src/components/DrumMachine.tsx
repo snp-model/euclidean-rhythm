@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
+import { Knob } from './Knob';
 import Track from './Track';
 import type { TrackConfig } from '../types';
 import { euclidean, patternToBitmask } from '../utils/euclidean';
@@ -35,6 +36,7 @@ export function DrumMachine({ patchConnection }: DrumMachineProps) {
   const [tempo, setTempo] = useState(120);
   const [globalSteps, setGlobalSteps] = useState(16);
   const [currentStep, setCurrentStep] = useState(-1);
+  const [kitIndex, setKitIndex] = useState(0);
 
   // Send pattern updates to Cmajor
   useEffect(() => {
@@ -73,6 +75,14 @@ export function DrumMachine({ patchConnection }: DrumMachineProps) {
     }
   }, [globalSteps, patchConnection]);
 
+  // Send kit index to Cmajor
+  useEffect(() => {
+    if (!patchConnection) return;
+    if (typeof patchConnection.sendEventOrValue === 'function') {
+      patchConnection.sendEventOrValue('kitIndex', kitIndex);
+    }
+  }, [kitIndex, patchConnection]);
+
   // Listen for currentStep events from Cmajor
   useEffect(() => {
     if (!patchConnection) return;
@@ -106,7 +116,7 @@ export function DrumMachine({ patchConnection }: DrumMachineProps) {
   };
 
   const handleGlobalStepsChange = (newSteps: number) => {
-    const clampedSteps = Math.max(1, Math.min(newSteps, 16));
+    const clampedSteps = Math.max(1, Math.min(newSteps, 32));
     setGlobalSteps(clampedSteps);
     setTracks((prev) =>
       prev.map((track) => ({
@@ -139,16 +149,30 @@ export function DrumMachine({ patchConnection }: DrumMachineProps) {
             />
             <span>{tempo} BPM</span>
           </label>
-          <label className="steps-control">
-            Steps:
-            <input
-              type="number"
-              min="1"
-              max="16"
-              value={globalSteps}
-              onChange={(e) => handleGlobalStepsChange(parseInt(e.target.value) || 1)}
-            />
-          </label>
+          <Knob
+            label="Steps"
+            value={globalSteps}
+            min={1}
+            max={32}
+            onChange={handleGlobalStepsChange}
+          />
+          <div className="kit-control">
+            <span className="control-label">Kit:</span>
+            <div className="kit-buttons">
+              <button
+                className={`kit-button ${kitIndex === 0 ? 'active' : ''}`}
+                onClick={() => setKitIndex(0)}
+              >
+                Standard
+              </button>
+              <button
+                className={`kit-button ${kitIndex === 1 ? 'active' : ''}`}
+                onClick={() => setKitIndex(1)}
+              >
+                Techno
+              </button>
+            </div>
+          </div>
         </div>
       </header>
 

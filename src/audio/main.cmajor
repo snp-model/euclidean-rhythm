@@ -4,18 +4,47 @@
     
     Architecture:
     - Sequencer: Sample-accurate clock, manages step timing
-    - DrumVoices: 8 synthesized drum sounds (Kick, Snare, HiHat closed/open, Clap, Tom, Rim, Cowbell)
-    - Pattern inputs: Each track receives a pattern array from React
+    - DrumVoices: Standard and 808 variants
+    - Switcher: Routes triggers based on kitIndex
 */
 
 // ============================================================
-// Drum Voice Processors
+// Utilities
+// ============================================================
+
+processor TriggerRouter
+{
+    input event float triggerIn;
+    input value int kitIndex;
+    output event float triggerStandard;
+    output event float trigger808;
+
+    int currentKit;
+
+    void main()
+    {
+        loop
+        {
+            currentKit = kitIndex;
+            advance();
+        }
+    }
+
+    event triggerIn(float vel)
+    {
+        if (currentKit == 0) triggerStandard <- vel;
+        else                 trigger808 <- vel;
+    }
+}
+
+// ============================================================
+// Standard Kit Voices (Original)
 // ============================================================
 
 // Kick Drum - Sine wave with pitch envelope
-processor KickVoice
+processor StandardKickVoice
 {
-    input event float trigger;  // velocity (0-1)
+    input event float trigger;
     output stream float audioOut;
 
     float phase;
@@ -27,12 +56,9 @@ processor KickVoice
     {
         loop
         {
-            // Pitch envelope decay
             pitchEnv *= 0.995f;
-            // Amplitude envelope decay
             ampEnv *= 0.9985f;
 
-            // Bass frequency with pitch sweep (150Hz base, up to 400Hz on attack)
             let freq = 55.0f + pitchEnv * 200.0f;
             phase = fmod(phase + freq * (1.0f / float(processor.frequency)), 1.0f);
 
@@ -50,8 +76,7 @@ processor KickVoice
     }
 }
 
-// Snare Drum - Triangle + Noise with quick decay
-processor SnareVoice
+processor StandardSnareVoice
 {
     input event float trigger;
     output stream float audioOut;
@@ -79,7 +104,6 @@ processor SnareVoice
             let freq = 180.0f;
             phase = fmod(phase + freq * (1.0f / float(processor.frequency)), 1.0f);
 
-            // Triangle wave + filtered noise
             let tri = abs(phase * 2.0f - 1.0f) * 2.0f - 1.0f;
             let noiseVal = noise() * noiseEnv;
 
@@ -97,8 +121,7 @@ processor SnareVoice
     }
 }
 
-// Hi-Hat Closed - Highpass noise with quick decay
-processor HiHatClosedVoice
+processor StandardHiHatClosedVoice
 {
     input event float trigger;
     output stream float audioOut;
@@ -120,12 +143,9 @@ processor HiHatClosedVoice
         loop
         {
             ampEnv *= 0.985f;
-
             let raw = noise();
-            // Simple highpass
             let hp = raw - lastSample;
             lastSample = raw * 0.95f + lastSample * 0.05f;
-
             audioOut <- hp * ampEnv * velocity * 0.7f;
             advance();
         }
@@ -138,8 +158,7 @@ processor HiHatClosedVoice
     }
 }
 
-// Hi-Hat Open - Longer decay than closed
-processor HiHatOpenVoice
+processor StandardHiHatOpenVoice
 {
     input event float trigger;
     output stream float audioOut;
@@ -160,12 +179,10 @@ processor HiHatOpenVoice
         seed = 456;
         loop
         {
-            ampEnv *= 0.9985f;  // Longer decay
-
+            ampEnv *= 0.9985f;
             let raw = noise();
             let hp = raw - lastSample;
             lastSample = raw * 0.95f + lastSample * 0.05f;
-
             audioOut <- hp * ampEnv * velocity * 0.5f;
             advance();
         }
@@ -178,8 +195,7 @@ processor HiHatOpenVoice
     }
 }
 
-// Clap - Multiple noise bursts
-processor ClapVoice
+processor StandardClapVoice
 {
     input event float trigger;
     output stream float audioOut;
@@ -203,14 +219,10 @@ processor ClapVoice
         {
             ampEnv *= 0.996f;
             sampleCount++;
-
-            // Create multiple "hits" for clap effect
             let burstEnv = (sampleCount < 100 || (sampleCount > 200 && sampleCount < 300) || (sampleCount > 400 && sampleCount < 500)) ? 1.0f : 0.3f;
-
             let raw = noise();
             let hp = raw - lastSample;
             lastSample = raw * 0.8f + lastSample * 0.2f;
-
             audioOut <- hp * ampEnv * velocity * burstEnv * 0.6f;
             advance();
         }
@@ -224,8 +236,7 @@ processor ClapVoice
     }
 }
 
-// Tom - Lower frequency sine with pitch envelope
-processor TomVoice
+processor StandardTomVoice
 {
     input event float trigger;
     output stream float audioOut;
@@ -241,10 +252,8 @@ processor TomVoice
         {
             pitchEnv *= 0.998f;
             ampEnv *= 0.998f;
-
             let freq = 100.0f + pitchEnv * 100.0f;
             phase = fmod(phase + freq * (1.0f / float(processor.frequency)), 1.0f);
-
             audioOut <- sin(phase * float(twoPi)) * ampEnv * velocity * 0.8f;
             advance();
         }
@@ -259,8 +268,7 @@ processor TomVoice
     }
 }
 
-// Rim Shot - High frequency click
-processor RimVoice
+processor StandardRimVoice
 {
     input event float trigger;
     output stream float audioOut;
@@ -274,10 +282,8 @@ processor RimVoice
         loop
         {
             ampEnv *= 0.99f;
-
             let freq = 800.0f;
             phase = fmod(phase + freq * (1.0f / float(processor.frequency)), 1.0f);
-
             let tri = abs(phase * 2.0f - 1.0f) * 2.0f - 1.0f;
             audioOut <- tri * ampEnv * velocity * 0.5f;
             advance();
@@ -292,8 +298,7 @@ processor RimVoice
     }
 }
 
-// Cowbell - Two detuned square waves
-processor CowbellVoice
+processor StandardCowbellVoice
 {
     input event float trigger;
     output stream float audioOut;
@@ -308,15 +313,12 @@ processor CowbellVoice
         loop
         {
             ampEnv *= 0.9992f;
-
             let freq1 = 560.0f;
             let freq2 = 845.0f;
             phase1 = fmod(phase1 + freq1 * (1.0f / float(processor.frequency)), 1.0f);
             phase2 = fmod(phase2 + freq2 * (1.0f / float(processor.frequency)), 1.0f);
-
             let sq1 = phase1 < 0.5f ? 1.0f : -1.0f;
             let sq2 = phase2 < 0.5f ? 1.0f : -1.0f;
-
             audioOut <- (sq1 + sq2) * 0.5f * ampEnv * velocity * 0.3f;
             advance();
         }
@@ -328,6 +330,526 @@ processor CowbellVoice
         ampEnv = 1.0f;
         phase1 = 0.0f;
         phase2 = 0.0f;
+    }
+}
+
+// ============================================================
+// 808 Kit Voices
+// ============================================================
+
+processor KickVoice808
+{
+    input event float trigger;
+    output stream float audioOut;
+
+    float phase;
+    float ampEnv;
+    float pitchEnv;
+    float velocity;
+
+    void main()
+    {
+        loop
+        {
+            ampEnv *= 0.9993f; // Long decay
+            pitchEnv *= 0.994f; // Pitch chirp
+
+            let baseFreq = 50.0f;
+            let freq = baseFreq + pitchEnv * 100.0f;
+            
+            phase = fmod(phase + freq * (1.0f / float(processor.frequency)), 1.0f);
+            
+            // Soft sine with saturation
+            let sig = sin(phase * float(twoPi));
+            let sat = tanh(sig * 1.5f);
+
+            // Click transient
+            let click = (pitchEnv > 0.8f) ? 0.3f : 0.0f;
+
+            audioOut <- (sat + click) * ampEnv * velocity * 1.2f;
+            advance();
+        }
+    }
+
+    event trigger(float vel)
+    {
+        velocity = vel;
+        ampEnv = 1.0f;
+        pitchEnv = 1.0f;
+        phase = 0.0f;
+    }
+}
+
+processor SnareVoice808
+{
+    input event float trigger;
+    output stream float audioOut;
+
+    float tonePhase1;
+    float tonePhase2;
+    float toneEnv;
+    float noiseEnv;
+    float velocity;
+    int seed;
+    
+    // HPF state for noise
+    float hpf1, hpf2;
+
+    float noise()
+    {
+        seed = seed * 1103515245 + 12345;
+        return float(seed) / float(2147483647);
+    }
+
+    void main()
+    {
+        seed = 999;
+        loop
+        {
+            toneEnv *= 0.996f; // Tonal decay
+            noiseEnv *= 0.993f; // Snappy decay
+
+            // Tonal: Two detuned sines
+            let f1 = 180.0f;
+            let f2 = 330.0f;
+            
+            tonePhase1 = fmod(tonePhase1 + f1 * (1.0f / float(processor.frequency)), 1.0f);
+            tonePhase2 = fmod(tonePhase2 + f2 * (1.0f / float(processor.frequency)), 1.0f);
+            
+            let tone = (sin(tonePhase1 * float(twoPi)) * 0.5f + sin(tonePhase2 * float(twoPi)) * 0.3f) * toneEnv;
+
+            // Noise: Highpassed
+            let rawNoise = noise();
+            // Simple HPF
+            hpf1 = rawNoise - hpf2 + 0.9f * hpf1;
+            hpf2 = rawNoise;
+            
+            audioOut <- (tone + hpf1 * noiseEnv * 0.8f) * velocity * 0.8f;
+            advance();
+        }
+    }
+
+    event trigger(float vel)
+    {
+        velocity = vel;
+        toneEnv = 1.0f;
+        noiseEnv = 1.0f;
+    }
+}
+
+processor HiHat808
+{
+    input event float trigger;
+    input value float decay; 
+    output stream float audioOut;
+
+    float ampEnv;
+    float velocity;
+    
+    // 6 Square wave oscillators for metallic sound
+    float p1, p2, p3, p4, p5, p6;
+    float bandpass;
+
+    void main()
+    {
+        loop
+        {
+            ampEnv *= decay;
+            
+            // Frequencies from TR-808 diagrams (approx)
+            // 263, 400, 421, 474, 587, 845 Hz (roughly)
+            let dt = 1.0f / float(processor.frequency);
+            p1 = fmod(p1 + 263.0f * dt, 1.0f);
+            p2 = fmod(p2 + 400.0f * dt, 1.0f);
+            p3 = fmod(p3 + 421.0f * dt, 1.0f);
+            p4 = fmod(p4 + 474.0f * dt, 1.0f);
+            p5 = fmod(p5 + 587.0f * dt, 1.0f);
+            p6 = fmod(p6 + 845.0f * dt, 1.0f);
+
+            let mix = ( (p1>0.5f?1.0f:-1.0f) + (p2>0.5f?1.0f:-1.0f) + (p3>0.5f?1.0f:-1.0f) + 
+                        (p4>0.5f?1.0f:-1.0f) + (p5>0.5f?1.0f:-1.0f) + (p6>0.5f?1.0f:-1.0f) );
+
+            // Bandpass filtering (simple state variable approx)
+            // We'll just use a simple differencing for HPF feeling
+            let hp = mix - bandpass;
+            bandpass = mix * 0.1f + bandpass * 0.9f;
+            
+            audioOut <- hp * ampEnv * velocity * 0.15f;
+            advance();
+        }
+    }
+
+    event trigger(float vel)
+    {
+        velocity = vel;
+        ampEnv = 1.0f;
+    }
+}
+
+graph HiHatClosedVoice808
+{
+    input event float trigger;
+    output stream float audioOut;
+    node hh = HiHat808;
+    connection trigger -> hh.trigger;
+    connection hh.audioOut -> audioOut;
+    connection 0.985f -> hh.decay;
+}
+
+graph HiHatOpenVoice808
+{
+    input event float trigger;
+    output stream float audioOut;
+    node hh = HiHat808;
+    connection trigger -> hh.trigger;
+    connection hh.audioOut -> audioOut;
+    connection 0.996f -> hh.decay;
+}
+
+processor ClapVoice808
+{
+    input event float trigger;
+    output stream float audioOut;
+
+    float ampEnv;
+    float velocity;
+    int seed;
+    int clapTimer;
+    int clapCount;
+    float noiseFilter;
+
+    float noise()
+    {
+        seed = seed * 1103515245 + 12345;
+        return float(seed) / float(2147483647);
+    }
+
+    void main()
+    {
+        seed = 333;
+        loop
+        {
+            // Re-trigger envelope logic
+            if (clapCount > 0)
+            {
+                clapTimer++;
+                if (clapTimer > 400) // ~10ms at 44.1k
+                {
+                    clapTimer = 0;
+                    clapCount--;
+                    ampEnv = 1.0f;
+                }
+            }
+            
+            ampEnv *= 0.995f; 
+
+            let n = noise();
+            // LPF
+            noiseFilter = noiseFilter * 0.6f + n * 0.4f;
+
+            audioOut <- noiseFilter * ampEnv * velocity * 0.8f;
+            advance();
+        }
+    }
+
+    event trigger(float vel)
+    {
+        velocity = vel;
+        ampEnv = 1.0f;
+        clapCount = 3; // 3 bursts + final decay
+        clapTimer = 0;
+    }
+}
+
+processor TomVoice808
+{
+    input event float trigger;
+    output stream float audioOut;
+
+    float phase;
+    float ampEnv;
+    float pitchEnv;
+    float velocity;
+
+    void main()
+    {
+        loop
+        {
+            ampEnv *= 0.9985f;
+            pitchEnv *= 0.992f;
+
+            let freq = 100.0f + pitchEnv * 50.0f;
+            phase = fmod(phase + freq * (1.0f / float(processor.frequency)), 1.0f);
+
+            // Sine with soft clip
+            let sig = sin(phase * float(twoPi));
+
+            audioOut <- sig * ampEnv * velocity * 0.9f;
+            advance();
+        }
+    }
+
+    event trigger(float vel)
+    {
+        velocity = vel;
+        ampEnv = 1.0f;
+        pitchEnv = 1.0f;
+    }
+}
+
+processor RimVoice808
+{
+    input event float trigger;
+    output stream float audioOut;
+
+    float ampEnv;
+    float velocity;
+    float bpf1, bpf2;
+    int seed;
+
+    float noise()
+    {
+        seed = seed * 1103515245 + 12345;
+        return float(seed) / float(2147483647);
+    }
+
+    void main()
+    {
+        seed = 111;
+        loop
+        {
+            ampEnv *= 0.99f;
+            
+            // Short burst
+            let inSig = (ampEnv > 0.01f) ? (noise() * 0.5f) : 0.0f;
+
+            // Resonant BPF at ~1.8kHz
+            // y[n] = 0.05*x[n] + 1.8*y[n-1] - 0.9*y[n-2] (Rough approx)
+            let out = 0.1f * inSig + 1.6f * bpf1 - 0.95f * bpf2;
+            bpf2 = bpf1;
+            bpf1 = out;
+
+            audioOut <- out * ampEnv * velocity * 0.8f;
+            advance();
+        }
+    }
+
+    event trigger(float vel)
+    {
+        velocity = vel;
+        ampEnv = 1.0f;
+    }
+}
+
+processor CowbellVoice808
+{
+    input event float trigger;
+    output stream float audioOut;
+
+    float p1, p2;
+    float ampEnv;
+    float velocity;
+    float bpf1, bpf2;
+
+    void main()
+    {
+        loop
+        {
+            ampEnv *= 0.9985f;
+
+            // Two square waves
+            let dt = 1.0f / float(processor.frequency);
+            p1 = fmod(p1 + 540.0f * dt, 1.0f);
+            p2 = fmod(p2 + 800.0f * dt, 1.0f);
+
+            let sq = (p1>0.5f?1.0f:-1.0f) + (p2>0.5f?1.0f:-1.0f);
+
+            // Bandpass filter
+            let out = 0.05f * sq + 1.8f * bpf1 - 0.92f * bpf2;
+            bpf2 = bpf1;
+            bpf1 = out;
+
+            audioOut <- out * ampEnv * velocity * 0.4f;
+            advance();
+        }
+    }
+
+    event trigger(float vel)
+    {
+        velocity = vel;
+        ampEnv = 1.0f;
+    }
+}
+
+// ============================================================
+// Voice Wrappers (Selection Logic)
+// ============================================================
+
+graph KickWrapper
+{
+    input event float trigger;
+    input value int kitIndex;
+    output stream float audioOut;
+
+    node router = TriggerRouter;
+    node std = StandardKickVoice;
+    node v808 = KickVoice808;
+
+    connection
+    {
+        trigger -> router.triggerIn;
+        kitIndex -> router.kitIndex;
+        router.triggerStandard -> std.trigger;
+        router.trigger808 -> v808.trigger;
+        std.audioOut -> audioOut;
+        v808.audioOut -> audioOut;
+    }
+}
+
+graph SnareWrapper
+{
+    input event float trigger;
+    input value int kitIndex;
+    output stream float audioOut;
+
+    node router = TriggerRouter;
+    node std = StandardSnareVoice;
+    node v808 = SnareVoice808;
+
+    connection
+    {
+        trigger -> router.triggerIn;
+        kitIndex -> router.kitIndex;
+        router.triggerStandard -> std.trigger;
+        router.trigger808 -> v808.trigger;
+        std.audioOut -> audioOut;
+        v808.audioOut -> audioOut;
+    }
+}
+
+graph HiHatClosedWrapper
+{
+    input event float trigger;
+    input value int kitIndex;
+    output stream float audioOut;
+
+    node router = TriggerRouter;
+    node std = StandardHiHatClosedVoice;
+    node v808 = HiHatClosedVoice808;
+
+    connection
+    {
+        trigger -> router.triggerIn;
+        kitIndex -> router.kitIndex;
+        router.triggerStandard -> std.trigger;
+        router.trigger808 -> v808.trigger;
+        std.audioOut -> audioOut;
+        v808.audioOut -> audioOut;
+    }
+}
+
+graph HiHatOpenWrapper
+{
+    input event float trigger;
+    input value int kitIndex;
+    output stream float audioOut;
+
+    node router = TriggerRouter;
+    node std = StandardHiHatOpenVoice;
+    node v808 = HiHatOpenVoice808;
+
+    connection
+    {
+        trigger -> router.triggerIn;
+        kitIndex -> router.kitIndex;
+        router.triggerStandard -> std.trigger;
+        router.trigger808 -> v808.trigger;
+        std.audioOut -> audioOut;
+        v808.audioOut -> audioOut;
+    }
+}
+
+graph ClapWrapper
+{
+    input event float trigger;
+    input value int kitIndex;
+    output stream float audioOut;
+
+    node router = TriggerRouter;
+    node std = StandardClapVoice;
+    node v808 = ClapVoice808;
+
+    connection
+    {
+        trigger -> router.triggerIn;
+        kitIndex -> router.kitIndex;
+        router.triggerStandard -> std.trigger;
+        router.trigger808 -> v808.trigger;
+        std.audioOut -> audioOut;
+        v808.audioOut -> audioOut;
+    }
+}
+
+graph TomWrapper
+{
+    input event float trigger;
+    input value int kitIndex;
+    output stream float audioOut;
+
+    node router = TriggerRouter;
+    node std = StandardTomVoice;
+    node v808 = TomVoice808;
+
+    connection
+    {
+        trigger -> router.triggerIn;
+        kitIndex -> router.kitIndex;
+        router.triggerStandard -> std.trigger;
+        router.trigger808 -> v808.trigger;
+        std.audioOut -> audioOut;
+        v808.audioOut -> audioOut;
+    }
+}
+
+graph RimWrapper
+{
+    input event float trigger;
+    input value int kitIndex;
+    output stream float audioOut;
+
+    node router = TriggerRouter;
+    node std = StandardRimVoice;
+    node v808 = RimVoice808;
+
+    connection
+    {
+        trigger -> router.triggerIn;
+        kitIndex -> router.kitIndex;
+        router.triggerStandard -> std.trigger;
+        router.trigger808 -> v808.trigger;
+        std.audioOut -> audioOut;
+        v808.audioOut -> audioOut;
+    }
+}
+
+graph CowbellWrapper
+{
+    input event float trigger;
+    input value int kitIndex;
+    output stream float audioOut;
+
+    node router = TriggerRouter;
+    node std = StandardCowbellVoice;
+    node v808 = CowbellVoice808;
+
+    connection
+    {
+        trigger -> router.triggerIn;
+        kitIndex -> router.kitIndex;
+        router.triggerStandard -> std.trigger;
+        router.trigger808 -> v808.trigger;
+        std.audioOut -> audioOut;
+        v808.audioOut -> audioOut;
     }
 }
 
@@ -425,6 +947,7 @@ graph Main [[ main ]]
     input value float tempo [[ name: "Tempo", min: 40, max: 300, init: 120 ]];
     input value bool playing [[ name: "Playing", init: false ]];
     input value int steps [[ name: "Steps", min: 1, max: 16, init: 16 ]];
+    input value int kitIndex [[ name: "Kit Index", min: 0, max: 1, init: 0 ]];
 
     input value int pattern0 [[ name: "Kick Pattern", init: 0 ]];
     input value int pattern1 [[ name: "Snare Pattern", init: 0 ]];
@@ -438,14 +961,14 @@ graph Main [[ main ]]
     node
     {
         sequencer = Sequencer;
-        kick = KickVoice;
-        snare = SnareVoice;
-        hihatClosed = HiHatClosedVoice;
-        hihatOpen = HiHatOpenVoice;
-        clap = ClapVoice;
-        tom = TomVoice;
-        rim = RimVoice;
-        cowbell = CowbellVoice;
+        kick = KickWrapper;
+        snare = SnareWrapper;
+        hihatClosed = HiHatClosedWrapper;
+        hihatOpen = HiHatOpenWrapper;
+        clap = ClapWrapper;
+        tom = TomWrapper;
+        rim = RimWrapper;
+        cowbell = CowbellWrapper;
     }
 
     connection
@@ -463,6 +986,16 @@ graph Main [[ main ]]
         pattern5 -> sequencer.pattern5;
         pattern6 -> sequencer.pattern6;
         pattern7 -> sequencer.pattern7;
+
+        // Kit Index to Wrappers
+        kitIndex -> kick.kitIndex;
+        kitIndex -> snare.kitIndex;
+        kitIndex -> hihatClosed.kitIndex;
+        kitIndex -> hihatOpen.kitIndex;
+        kitIndex -> clap.kitIndex;
+        kitIndex -> tom.kitIndex;
+        kitIndex -> rim.kitIndex;
+        kitIndex -> cowbell.kitIndex;
 
         // Sequencer triggers to drum voices
         sequencer.trigger0 -> kick.trigger;

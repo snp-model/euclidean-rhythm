@@ -1,0 +1,69 @@
+.stepper-container {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  user-select: none;
+}
+
+.stepper-label {
+  font-size: 9px;
+  color: #8a8a9a;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.stepper-control {
+  display: flex;
+  align-items: center;
+  background: rgba(15, 15, 25, 0.7);
+  padding: 2px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.4);
+}
+
+.stepper-button {
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: transparent;
+  color: #fff;
+  font-size: 16px;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: all 0.2s ease;
+  border-radius: 6px;
+}
+
+.stepper-button:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.stepper-button:active:not(:disabled) {
+  background: #6366f1;
+}
+
+.stepper-button:disabled {
+  opacity: 0.1;
+}
+
+.stepper-display {
+  width: 36px;
+  height: 28px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-left: 1px solid rgba(255, 255, 255, 0.05);
+  border-right: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.stepper-number {
+  font-size: 14px;
+  font-weight: 700;
+  color: #fff;
+  font-variant-numeric: tabular-nums;
+}

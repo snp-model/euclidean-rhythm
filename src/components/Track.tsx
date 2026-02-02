@@ -1,11 +1,8 @@
 import { useMemo } from 'react';
 import { euclidean } from '../utils/euclidean';
-import './Track.css';
-
 import type { TrackConfig } from '../types';
-
-// export interface TrackConfig removed
-
+import './Track.css';
+import { Knob } from './Knob';
 
 interface TrackProps {
   config: TrackConfig;
@@ -23,7 +20,6 @@ export function Track({ config, currentStep, onConfigChange }: TrackProps) {
     onConfigChange({ ...config, pulses: Math.max(0, Math.min(value, config.steps)) });
   };
 
-
   const handleRotationChange = (value: number) => {
     onConfigChange({ ...config, rotation: value });
   };
@@ -35,34 +31,30 @@ export function Track({ config, currentStep, onConfigChange }: TrackProps) {
   return (
     <div className="track">
       <div className="track-header">
-        <span className="track-name">{config.name}</span>
+        <div className="track-info">
+          <span className="track-name">{config.name}</span>
+        </div>
         <div className="track-controls">
-          <label>
-            Pulses:
-            <input
-              type="number"
-              min="0"
-              max={config.steps}
-              value={config.pulses}
-              onChange={(e) => handlePulsesChange(parseInt(e.target.value) || 0)}
-            />
-          </label>
-          <label>
-            Rotation:
-            <input
-              type="number"
-              min="0"
-              max={config.steps - 1}
-              value={config.rotation}
-              onChange={(e) => handleRotationChange(parseInt(e.target.value) || 0)}
-            />
-          </label>
+          <Knob
+            label="Pulses"
+            value={config.pulses}
+            min={0}
+            max={config.steps}
+            onChange={handlePulsesChange}
+          />
+          <Knob
+            label="Rotation"
+            value={config.rotation}
+            min={0}
+            max={config.steps - 1}
+            onChange={handleRotationChange}
+          />
           <button 
             className={`reverse-toggle ${config.reversed ? 'active' : ''}`}
             onClick={handleReverseToggle}
             title="Reverse Pattern"
           >
-            Reverse
+            REV
           </button>
         </div>
       </div>
