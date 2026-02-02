@@ -3,6 +3,7 @@ import { Knob } from './Knob';
 import Track from './Track';
 import type { TrackConfig } from '../types';
 import { euclidean, patternToBitmask } from '../utils/euclidean';
+import { RHYTHM_PRESETS } from '../constants/presets';
 import './DrumMachine.css';
 
 const DRUM_NAMES = [
@@ -129,51 +130,103 @@ export function DrumMachine({ patchConnection }: DrumMachineProps) {
     );
   };
 
+  const handlePresetChange = (presetId: string) => {
+    const preset = RHYTHM_PRESETS.find((p) => p.id === presetId);
+    if (!preset) return;
+
+    // Update global steps if different
+    if (globalSteps !== preset.steps) {
+      setGlobalSteps(preset.steps);
+    }
+
+    // Update tracks with preset values or defaults
+    setTracks((prevTracks) =>
+      prevTracks.map((track) => {
+        const trackPreset = preset.tracks.find((t) => t.id === track.id);
+        if (trackPreset) {
+          return {
+            ...track,
+            steps: preset.steps,
+            pulses: trackPreset.pulses,
+            rotation: trackPreset.rotation,
+          };
+        }
+        // Reset other tracks to silence/default, but keep basic config
+        return {
+          ...track,
+          steps: preset.steps,
+          pulses: 0,
+          rotation: 0,
+        };
+      })
+    );
+  };
+
   return (
     <div className="drum-machine">
       <header className="drum-machine-header">
         <h1>Euclidean Drum Machine</h1>
         <div className="global-controls">
-          <button
-            className={`play-button ${playing ? 'playing' : ''}`}
-            onClick={handlePlayPause}
-          >
-            {playing ? '⏹ Stop' : '▶ Play'}
-          </button>
-          <label className="tempo-control">
-            Tempo
-            <input
-              type="range"
-              min="40"
-              max="300"
-              value={tempo}
-              onChange={(e) => setTempo(parseInt(e.target.value))}
-            />
-            <span>{tempo} BPM</span>
-          </label>
-          <Knob
-            label="Steps"
-            value={globalSteps}
-            min={1}
-            max={32}
-            onChange={handleGlobalStepsChange}
-          />
-          <div className="kit-control">
-            <span className="control-label">Kit</span>
-            <div className="kit-buttons">
-              <button
-                className={`kit-button ${kitIndex === 0 ? 'active' : ''}`}
-                onClick={() => setKitIndex(0)}
-              >
-                Standard
-              </button>
-              <button
-                className={`kit-button ${kitIndex === 1 ? 'active' : ''}`}
-                onClick={() => setKitIndex(1)}
-              >
-                Techno
-              </button>
+          <div className="control-group secondary-controls">
+            <div className="kit-control">
+              <span className="control-label">Kit</span>
+              <div className="kit-buttons">
+                <button
+                  className={`kit-button ${kitIndex === 0 ? 'active' : ''}`}
+                  onClick={() => setKitIndex(0)}
+                >
+                  Standard
+                </button>
+                <button
+                  className={`kit-button ${kitIndex === 1 ? 'active' : ''}`}
+                  onClick={() => setKitIndex(1)}
+                >
+                  Techno
+                </button>
+              </div>
             </div>
+            <div className="preset-control">
+              <span className="control-label">PRESET</span>
+              <select
+                className="preset-select"
+                onChange={(e) => handlePresetChange(e.target.value)}
+                defaultValue=""
+              >
+                <option value="" disabled>Select Preset</option>
+                {RHYTHM_PRESETS.map((preset) => (
+                  <option key={preset.id} value={preset.id}>
+                    {preset.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <div className="control-group primary-controls">
+            <button
+              className={`play-button ${playing ? 'playing' : ''}`}
+              onClick={handlePlayPause}
+            >
+              {playing ? '⏹ Stop' : '▶ Play'}
+            </button>
+            <label className="tempo-control">
+              Tempo
+              <input
+                type="range"
+                min="40"
+                max="300"
+                value={tempo}
+                onChange={(e) => setTempo(parseInt(e.target.value))}
+              />
+              <span>{tempo} BPM</span>
+            </label>
+            <Knob
+              label="Steps"
+              value={globalSteps}
+              min={1}
+              max={32}
+              onChange={handleGlobalStepsChange}
+            />
           </div>
         </div>
       </header>
