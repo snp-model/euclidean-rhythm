@@ -1,0 +1,10 @@
+{
+    "CmajorVersion": 1,
+    "ID": "com.example.euclidean-drum-machine",
+    "version": "1.0",
+    "name": "Euclidean Drum Machine",
+    "description": "8-track Euclidean rhythm drum machine",
+    "manufacturer": "Example",
+    "category": "generator",
+    "source": "main.cmajor"
+}

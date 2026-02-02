@@ -163,5 +163,57 @@ When implementing a virtual keyboard or interactive controls in a custom View:
     *   Do not use simple `click` or `mousedown` on individual keys.
     *   Use **Pointer Events** (`pointerdown`, `pointermove`, `pointerup`) on the container.
     *   Use `setPointerCapture(e.pointerId)` on `pointerdown` to track the cursor even if it leaves the element.
-    *   Use `this.shadowRoot.elementFromPoint(x, y)` to detect which key is under the cursor during a drag, especially if using Shadow DOM.
+
+### 6. Integrating with Vite (Direct Import Method)
+When integrating Cmajor with a React/Vite project, you can import the auto-generated JS file directly from your source directory without copying it to the public folder.
+
+**1. Configure vite.config.ts**
+Add a custom transform plugin to ignore dynamic imports inside Cmajor files (which cause Vite errors), and set an alias to point to the Cmajor output directory.
+
+```typescript
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
+import { resolve } from 'path'
+
+export default defineConfig({
+  plugins: [
+    react(),
+    {
+      name: 'cmajor-vite-ignore',
+      transform(code, id) {
+        // Suppress dynamic import warnings in Cmajor generated files
+        if (id.includes('cmaj-audio-worklet-helper.js') || 
+            id.includes('cmaj-patch-view.js') || 
+            id.includes('cmaj-patch-connection.js')) {
+          return {
+            code: code.replace(/import\s*\(/g, 'import(/* @vite-ignore */ '),
+            map: null
+          };
+        }
+      }
+    }
+  ],
+  resolve: {
+    alias: {
+      // Map '/cmaj_api' to the source directory
+      '/cmaj_api': resolve(__dirname, './src/cmaj_api'),
+      // Map the main JS file alias
+      '/my_patch.js': resolve(__dirname, './src/cmajor/export/my_patch.js'),
+    },
+  },
+})
+```
+
+**2. Import in React Component**
+With the alias in place, you can simply import the module.
+
+```javascript
+// Dynamic import using the alias
+const patchModule = await import('/my_patch.js');
+
+const connection = await patchModule.createAudioWorkletNodePatchConnection(
+  audioContext,
+  'cmaj-worklet-processor'
+);
+```
 

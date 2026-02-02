@@ -1,14 +1,490 @@
-
 /*
     Euclidean Rhythm Drum Machine
     Main Cmajor Patch
+    
+    Architecture:
+    - Sequencer: Sample-accurate clock, manages step timing
+    - DrumVoices: 8 synthesized drum sounds (Kick, Snare, HiHat closed/open, Clap, Tom, Rim, Cowbell)
+    - Pattern inputs: Each track receives a pattern array from React
 */
 
+// ============================================================
+// Drum Voice Processors
+// ============================================================
+
+// Kick Drum - Sine wave with pitch envelope
+processor KickVoice
+{
+    input event float trigger;  // velocity (0-1)
+    output stream float audioOut;
+
+    float phase;
+    float pitchEnv;
+    float ampEnv;
+    float velocity;
+
+    void main()
+    {
+        loop
+        {
+            // Pitch envelope decay
+            pitchEnv *= 0.995f;
+            // Amplitude envelope decay
+            ampEnv *= 0.9985f;
+
+            // Bass frequency with pitch sweep (150Hz base, up to 400Hz on attack)
+            let freq = 55.0f + pitchEnv * 200.0f;
+            phase = fmod(phase + freq * (1.0f / float(processor.frequency)), 1.0f);
+
+            audioOut <- sin(phase * float(twoPi)) * ampEnv * velocity;
+            advance();
+        }
+    }
+
+    event trigger(float vel)
+    {
+        velocity = vel;
+        pitchEnv = 1.0f;
+        ampEnv = 1.0f;
+        phase = 0.0f;
+    }
+}
+
+// Snare Drum - Triangle + Noise with quick decay
+processor SnareVoice
+{
+    input event float trigger;
+    output stream float audioOut;
+
+    float phase;
+    float ampEnv;
+    float noiseEnv;
+    float velocity;
+    int seed;
+
+    float noise()
+    {
+        seed = seed * 1103515245 + 12345;
+        return float(seed) / float(2147483647);
+    }
+
+    void main()
+    {
+        seed = 42;
+        loop
+        {
+            ampEnv *= 0.997f;
+            noiseEnv *= 0.992f;
+
+            let freq = 180.0f;
+            phase = fmod(phase + freq * (1.0f / float(processor.frequency)), 1.0f);
+
+            // Triangle wave + filtered noise
+            let tri = abs(phase * 2.0f - 1.0f) * 2.0f - 1.0f;
+            let noiseVal = noise() * noiseEnv;
+
+            audioOut <- (tri * ampEnv * 0.4f + noiseVal * 0.6f) * velocity;
+            advance();
+        }
+    }
+
+    event trigger(float vel)
+    {
+        velocity = vel;
+        ampEnv = 1.0f;
+        noiseEnv = 1.0f;
+        phase = 0.0f;
+    }
+}
+
+// Hi-Hat Closed - Highpass noise with quick decay
+processor HiHatClosedVoice
+{
+    input event float trigger;
+    output stream float audioOut;
+
+    float ampEnv;
+    float velocity;
+    int seed;
+    float lastSample;
+
+    float noise()
+    {
+        seed = seed * 1103515245 + 12345;
+        return float(seed) / float(2147483647);
+    }
+
+    void main()
+    {
+        seed = 123;
+        loop
+        {
+            ampEnv *= 0.985f;
+
+            let raw = noise();
+            // Simple highpass
+            let hp = raw - lastSample;
+            lastSample = raw * 0.95f + lastSample * 0.05f;
+
+            audioOut <- hp * ampEnv * velocity * 0.7f;
+            advance();
+        }
+    }
+
+    event trigger(float vel)
+    {
+        velocity = vel;
+        ampEnv = 1.0f;
+    }
+}
+
+// Hi-Hat Open - Longer decay than closed
+processor HiHatOpenVoice
+{
+    input event float trigger;
+    output stream float audioOut;
+
+    float ampEnv;
+    float velocity;
+    int seed;
+    float lastSample;
+
+    float noise()
+    {
+        seed = seed * 1103515245 + 12345;
+        return float(seed) / float(2147483647);
+    }
+
+    void main()
+    {
+        seed = 456;
+        loop
+        {
+            ampEnv *= 0.9985f;  // Longer decay
+
+            let raw = noise();
+            let hp = raw - lastSample;
+            lastSample = raw * 0.95f + lastSample * 0.05f;
+
+            audioOut <- hp * ampEnv * velocity * 0.5f;
+            advance();
+        }
+    }
+
+    event trigger(float vel)
+    {
+        velocity = vel;
+        ampEnv = 1.0f;
+    }
+}
+
+// Clap - Multiple noise bursts
+processor ClapVoice
+{
+    input event float trigger;
+    output stream float audioOut;
+
+    float ampEnv;
+    float velocity;
+    int seed;
+    int sampleCount;
+    float lastSample;
+
+    float noise()
+    {
+        seed = seed * 1103515245 + 12345;
+        return float(seed) / float(2147483647);
+    }
+
+    void main()
+    {
+        seed = 789;
+        loop
+        {
+            ampEnv *= 0.996f;
+            sampleCount++;
+
+            // Create multiple "hits" for clap effect
+            let burstEnv = (sampleCount < 100 || (sampleCount > 200 && sampleCount < 300) || (sampleCount > 400 && sampleCount < 500)) ? 1.0f : 0.3f;
+
+            let raw = noise();
+            let hp = raw - lastSample;
+            lastSample = raw * 0.8f + lastSample * 0.2f;
+
+            audioOut <- hp * ampEnv * velocity * burstEnv * 0.6f;
+            advance();
+        }
+    }
+
+    event trigger(float vel)
+    {
+        velocity = vel;
+        ampEnv = 1.0f;
+        sampleCount = 0;
+    }
+}
+
+// Tom - Lower frequency sine with pitch envelope
+processor TomVoice
+{
+    input event float trigger;
+    output stream float audioOut;
+
+    float phase;
+    float pitchEnv;
+    float ampEnv;
+    float velocity;
+
+    void main()
+    {
+        loop
+        {
+            pitchEnv *= 0.998f;
+            ampEnv *= 0.998f;
+
+            let freq = 100.0f + pitchEnv * 100.0f;
+            phase = fmod(phase + freq * (1.0f / float(processor.frequency)), 1.0f);
+
+            audioOut <- sin(phase * float(twoPi)) * ampEnv * velocity * 0.8f;
+            advance();
+        }
+    }
+
+    event trigger(float vel)
+    {
+        velocity = vel;
+        pitchEnv = 1.0f;
+        ampEnv = 1.0f;
+        phase = 0.0f;
+    }
+}
+
+// Rim Shot - High frequency click
+processor RimVoice
+{
+    input event float trigger;
+    output stream float audioOut;
+
+    float phase;
+    float ampEnv;
+    float velocity;
+
+    void main()
+    {
+        loop
+        {
+            ampEnv *= 0.99f;
+
+            let freq = 800.0f;
+            phase = fmod(phase + freq * (1.0f / float(processor.frequency)), 1.0f);
+
+            let tri = abs(phase * 2.0f - 1.0f) * 2.0f - 1.0f;
+            audioOut <- tri * ampEnv * velocity * 0.5f;
+            advance();
+        }
+    }
+
+    event trigger(float vel)
+    {
+        velocity = vel;
+        ampEnv = 1.0f;
+        phase = 0.0f;
+    }
+}
+
+// Cowbell - Two detuned square waves
+processor CowbellVoice
+{
+    input event float trigger;
+    output stream float audioOut;
+
+    float phase1;
+    float phase2;
+    float ampEnv;
+    float velocity;
+
+    void main()
+    {
+        loop
+        {
+            ampEnv *= 0.9992f;
+
+            let freq1 = 560.0f;
+            let freq2 = 845.0f;
+            phase1 = fmod(phase1 + freq1 * (1.0f / float(processor.frequency)), 1.0f);
+            phase2 = fmod(phase2 + freq2 * (1.0f / float(processor.frequency)), 1.0f);
+
+            let sq1 = phase1 < 0.5f ? 1.0f : -1.0f;
+            let sq2 = phase2 < 0.5f ? 1.0f : -1.0f;
+
+            audioOut <- (sq1 + sq2) * 0.5f * ampEnv * velocity * 0.3f;
+            advance();
+        }
+    }
+
+    event trigger(float vel)
+    {
+        velocity = vel;
+        ampEnv = 1.0f;
+        phase1 = 0.0f;
+        phase2 = 0.0f;
+    }
+}
+
+// ============================================================
+// Sequencer Processor
+// ============================================================
+processor Sequencer
+{
+    input value float tempo [[ name: "Tempo", min: 40, max: 300, init: 120 ]];
+    input value bool playing [[ name: "Playing", init: false ]];
+    input value int steps [[ name: "Steps", min: 1, max: 16, init: 16 ]];
+
+    // Pattern inputs for 8 tracks (each bit represents a step, up to 16 steps)
+    input value int pattern0 [[ name: "Pattern 0", init: 0 ]];
+    input value int pattern1 [[ name: "Pattern 1", init: 0 ]];
+    input value int pattern2 [[ name: "Pattern 2", init: 0 ]];
+    input value int pattern3 [[ name: "Pattern 3", init: 0 ]];
+    input value int pattern4 [[ name: "Pattern 4", init: 0 ]];
+    input value int pattern5 [[ name: "Pattern 5", init: 0 ]];
+    input value int pattern6 [[ name: "Pattern 6", init: 0 ]];
+    input value int pattern7 [[ name: "Pattern 7", init: 0 ]];
+
+    // Trigger outputs for each drum voice
+    output event float trigger0;
+    output event float trigger1;
+    output event float trigger2;
+    output event float trigger3;
+    output event float trigger4;
+    output event float trigger5;
+    output event float trigger6;
+    output event float trigger7;
+
+    // Current step output for UI sync
+    output event int currentStep;
+
+    int sampleCounter;
+    int lastStep;
+
+    void main()
+    {
+        loop
+        {
+            if (playing)
+            {
+                // Calculate samples per step (16th notes)
+                let samplesPerBeat = int(processor.frequency * 60.0f / tempo);
+                let samplesPerStep = samplesPerBeat / 4;
+
+                let currentStepIndex = (sampleCounter / samplesPerStep) % steps;
+
+                if (currentStepIndex != lastStep)
+                {
+                    lastStep = currentStepIndex;
+                    currentStep <- currentStepIndex;
+
+                    // Check each pattern and trigger if active
+                    let mask = 1 << currentStepIndex;
+
+                    if ((pattern0 & mask) != 0) trigger0 <- 1.0f;
+                    if ((pattern1 & mask) != 0) trigger1 <- 1.0f;
+                    if ((pattern2 & mask) != 0) trigger2 <- 1.0f;
+                    if ((pattern3 & mask) != 0) trigger3 <- 1.0f;
+                    if ((pattern4 & mask) != 0) trigger4 <- 1.0f;
+                    if ((pattern5 & mask) != 0) trigger5 <- 1.0f;
+                    if ((pattern6 & mask) != 0) trigger6 <- 1.0f;
+                    if ((pattern7 & mask) != 0) trigger7 <- 1.0f;
+                }
+
+                sampleCounter++;
+            }
+            else
+            {
+                sampleCounter = 0;
+                if (lastStep != -1)
+                {
+                    lastStep = -1;
+                    currentStep <- -1;
+                }
+            }
+
+            advance();
+        }
+    }
+}
+
+// ============================================================
+// Main Graph
+// ============================================================
 graph Main [[ main ]]
 {
     output stream float audioOut;
+    output event int currentStep;
 
-    node oscillator = std::oscillators::Sine (float, 440.0f);
+    // Sequencer inputs exposed to host
+    input value float tempo [[ name: "Tempo", min: 40, max: 300, init: 120 ]];
+    input value bool playing [[ name: "Playing", init: false ]];
+    input value int steps [[ name: "Steps", min: 1, max: 16, init: 16 ]];
 
-    connection oscillator -> audioOut;
+    input value int pattern0 [[ name: "Kick Pattern", init: 0 ]];
+    input value int pattern1 [[ name: "Snare Pattern", init: 0 ]];
+    input value int pattern2 [[ name: "HH Closed Pattern", init: 0 ]];
+    input value int pattern3 [[ name: "HH Open Pattern", init: 0 ]];
+    input value int pattern4 [[ name: "Clap Pattern", init: 0 ]];
+    input value int pattern5 [[ name: "Tom Pattern", init: 0 ]];
+    input value int pattern6 [[ name: "Rim Pattern", init: 0 ]];
+    input value int pattern7 [[ name: "Cowbell Pattern", init: 0 ]];
+
+    node
+    {
+        sequencer = Sequencer;
+        kick = KickVoice;
+        snare = SnareVoice;
+        hihatClosed = HiHatClosedVoice;
+        hihatOpen = HiHatOpenVoice;
+        clap = ClapVoice;
+        tom = TomVoice;
+        rim = RimVoice;
+        cowbell = CowbellVoice;
+    }
+
+    connection
+    {
+        // Sequencer inputs
+        tempo -> sequencer.tempo;
+        playing -> sequencer.playing;
+        steps -> sequencer.steps;
+
+        pattern0 -> sequencer.pattern0;
+        pattern1 -> sequencer.pattern1;
+        pattern2 -> sequencer.pattern2;
+        pattern3 -> sequencer.pattern3;
+        pattern4 -> sequencer.pattern4;
+        pattern5 -> sequencer.pattern5;
+        pattern6 -> sequencer.pattern6;
+        pattern7 -> sequencer.pattern7;
+
+        // Sequencer triggers to drum voices
+        sequencer.trigger0 -> kick.trigger;
+        sequencer.trigger1 -> snare.trigger;
+        sequencer.trigger2 -> hihatClosed.trigger;
+        sequencer.trigger3 -> hihatOpen.trigger;
+        sequencer.trigger4 -> clap.trigger;
+        sequencer.trigger5 -> tom.trigger;
+        sequencer.trigger6 -> rim.trigger;
+        sequencer.trigger7 -> cowbell.trigger;
+
+        // Current step output
+        sequencer.currentStep -> currentStep;
+
+        // Mix all drum voices to output
+        kick.audioOut -> audioOut;
+        snare.audioOut -> audioOut;
+        hihatClosed.audioOut -> audioOut;
+        hihatOpen.audioOut -> audioOut;
+        clap.audioOut -> audioOut;
+        tom.audioOut -> audioOut;
+        rim.audioOut -> audioOut;
+        cowbell.audioOut -> audioOut;
+    }
 }
