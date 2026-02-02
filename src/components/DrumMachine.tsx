@@ -87,11 +87,10 @@ export function DrumMachine({ patchConnection }: DrumMachineProps) {
   useEffect(() => {
     if (!patchConnection) return;
 
+    // The listener callback receives the value directly
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const handleEvent = (event: any) => {
-      if (event.type === 'currentStep') {
-        setCurrentStep(event.value);
-      }
+    const handleEvent = (value: any) => {
+      setCurrentStep(value);
     };
 
     if (typeof patchConnection.addEndpointListener === 'function') {
