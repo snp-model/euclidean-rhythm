@@ -19,7 +19,7 @@ function App() {
   if (!started) {
     return (
       <div className="app-container start-screen">
-        <h1>Euclidean Rhythm</h1>
+        <h1>Euclidean Drum Machine</h1>
         
         {error && (
           <div style={{ color: 'red', border: '1px solid red', padding: '10px', marginBottom: '20px' }}>

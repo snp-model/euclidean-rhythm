@@ -1,20 +1,18 @@
 .track {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  padding: 12px 16px;
-  background: rgba(30, 30, 45, 0.6);
+  gap: 12px;
+  padding: 16px;
+  background: #222;
   border-radius: 14px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(10px);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  border: 2px solid #333;
+  box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.3);
+  transition: transform 0.2s ease;
 }
 
 .track:hover {
-  background: rgba(40, 40, 60, 0.7);
-  box-shadow: 0 8px 12px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.08);
-  transform: translateY(-2px);
+  background: #2a2a2a;
+  border-color: #444;
 }
 
 .track-header {
@@ -22,8 +20,8 @@
   justify-content: space-between;
   align-items: center;
   width: 100%;
-  padding-bottom: 6px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  padding-bottom: 8px;
+  border-bottom: 2px solid #111;
 }
 
 .track-info {
@@ -33,41 +31,34 @@
 }
 
 .track-name {
-  font-weight: 800;
+  font-weight: 900;
   font-size: 14px;
-  color: #fff;
+  color: var(--accent-color);
   text-transform: uppercase;
   letter-spacing: 0.1em;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
 }
 
 .reverse-toggle {
   padding: 0 10px;
   height: 28px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: #333;
+  border: 1px solid #444;
   border-radius: 6px;
-  color: #888;
+  color: #666;
   font-size: 10px;
-  font-weight: 700;
+  font-weight: 800;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.1s ease;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   display: flex;
   align-items: center;
 }
 
-.reverse-toggle:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: #fff;
-}
-
 .reverse-toggle.active {
-  background: rgba(99, 102, 241, 0.2);
-  color: #818cf8;
-  border-color: #6366f1;
-  box-shadow: 0 0 12px rgba(99, 102, 241, 0.3);
+  background: #ff3300;
+  color: #000;
+  border-color: #ff6600;
 }
 
 .track-controls {
@@ -89,53 +80,29 @@
   flex: 1;
   max-width: 32px;
   aspect-ratio: 1;
-  border-radius: 3px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  transition: all 0.15s ease;
-  position: relative;
+  border-radius: 4px;
+  background: #111;
+  border: 1px solid #000;
+  transition: all 0.05s ease;
   overflow: hidden;
 }
 
-.step::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: radial-gradient(circle at center, rgba(255,255,255,0.1) 0%, transparent 70%);
-  opacity: 0;
-  transition: opacity 0.2s;
-}
-
-.step:hover {
-  background: rgba(255, 255, 255, 0.1);
-  border-color: rgba(255, 255, 255, 0.2);
-  transform: scale(1.05);
-}
-
 .step.active {
-  background: #6366f1;
-  box-shadow: 0 0 10px rgba(99, 102, 241, 0.5);
-  border-color: #818cf8;
-}
-
-.step.active::after {
-  opacity: 1;
+  background: var(--accent-color);
+  box-shadow: 0 0 12px rgba(255, 102, 0, 0.5);
+  border-color: #ffaa00;
 }
 
 .step.current {
-  background: rgba(255, 255, 255, 0.5) !important;
-  border-color: #fff;
-  box-shadow: 0 0 8px rgba(255, 255, 255, 0.5);
+  background: #444 !important;
+  border: 2px solid #fff;
   z-index: 10;
 }
 
 .step.active.current {
-  background: #fbbf24;
-  box-shadow: 0 0 12px rgba(251, 191, 36, 0.6);
-  border-color: #fcd34d;
+  background: #ffaa00;
+  box-shadow: 0 0 15px rgba(255, 170, 0, 0.8);
+  border-color: #fff;
 }
 
 @media (max-width: 600px) {
