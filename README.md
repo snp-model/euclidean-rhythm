@@ -27,6 +27,14 @@ CmajorとReactを使用した、数学的なアルゴリズム（Bjorklundのア
 - `src/utils/`: Bjorklundアルゴリズムによるリズム生成ロジック
 - `public/`: 静的資産 (Favicon, Sitemap, Robots.txt)
 
+## Cmajor の開発とコンパイル
+
+このプロジェクトでは、オーディオエンジンとして Cmajor を使用しています。コードを編集・コンパイルするには、以下の手順が推奨されます：
+
+1. **VSCode 拡張機能のインストール**: VSCode で [Cmajor 拡張機能](https://marketplace.visualstudio.com/items?itemName=SoundStacks.cmajor-vscode) をインストールします。
+2. **自動コンパイル**: `.cmajor` や `.cmajorpatch` ファイルを編集して保存すると、拡張機能により自動的にコンパイルが行われ、React 側の再生に反映されます。
+3. **スタンドアロン再生**: 必要に応じて `cmajor` コマンドラインツールを使用して、パッチを直接再生・検証することも可能です。
+
 ## 開発の始め方
 
 1. **依存関係のインストール**:
@@ -41,5 +49,6 @@ CmajorとReactを使用した、数学的なアルゴリズム（Bjorklundのア
 
 ## ライセンス
 
-MIT
+このプロジェクト自体は **GPLv3** ライセンスの下で公開されています。
+また、オーディオエンジンに [Cmajor](https://cmajor.dev/) を使用しており、その利用規約（GPLv3 または商用ライセンス）に従います。
 
