@@ -41,12 +41,25 @@ export function Knob({ label, value, min, max, onChange }: KnobProps) {
     
     // Start repeating after delay
     timeoutRef.current = setTimeout(() => {
-      intervalRef.current = setInterval(update, 80);
-    }, 400);
+      intervalRef.current = setInterval(update, 150); // Slower repeat for better control
+    }, 500); // Longer delay to prevent accidental repeats
   };
 
   // Cleanup on unmount
   useEffect(() => stopChange, []);
+
+  const handlePointerDown = (e: React.PointerEvent, diff: number) => {
+    // Only handle primary button (left click) for mouse
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
+    
+    // Prevent default to stop focus/scrolling issues
+    // and stop potential ghost clicks
+    if (e.cancelable) {
+      // e.preventDefault(); // Note: preventDefault on pointerdown might stop focus, which is fine
+    }
+    
+    startChange(diff);
+  };
 
   return (
     <div className="stepper-container">
@@ -54,11 +67,12 @@ export function Knob({ label, value, min, max, onChange }: KnobProps) {
       <div className="stepper-control">
         <button 
           className="stepper-button minus" 
-          onMouseDown={() => startChange(-1)}
-          onMouseUp={stopChange}
-          onMouseLeave={stopChange}
-          onTouchStart={(e) => { e.preventDefault(); startChange(-1); }}
-          onTouchEnd={stopChange}
+          onPointerDown={(e) => handlePointerDown(e, -1)}
+          onPointerUp={stopChange}
+          onPointerLeave={stopChange}
+          onPointerCancel={stopChange}
+          type="button"
+          style={{ touchAction: 'none' }}
           disabled={value <= min}
         >
           −
@@ -68,11 +82,12 @@ export function Knob({ label, value, min, max, onChange }: KnobProps) {
         </div>
         <button 
           className="stepper-button plus" 
-          onMouseDown={() => startChange(1)}
-          onMouseUp={stopChange}
-          onMouseLeave={stopChange}
-          onTouchStart={(e) => { e.preventDefault(); startChange(1); }}
-          onTouchEnd={stopChange}
+          onPointerDown={(e) => handlePointerDown(e, 1)}
+          onPointerUp={stopChange}
+          onPointerLeave={stopChange}
+          onPointerCancel={stopChange}
+          type="button"
+          style={{ touchAction: 'none' }}
           disabled={value >= max}
         >
           +
