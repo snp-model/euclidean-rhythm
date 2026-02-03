@@ -75,3 +75,27 @@
   font-size: 14px !important;
   opacity: 0.6;
 }
+
+.seo-info {
+  max-width: 600px;
+  margin-top: 40px;
+  padding: 20px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: #666;
+  text-align: left;
+  border-top: 1px solid #222;
+}
+
+.seo-info h2 {
+  font-size: 14px;
+  color: #888;
+  margin-bottom: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.seo-info p {
+  margin-bottom: 10px;
+  color: #666;
+}

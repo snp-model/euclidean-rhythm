@@ -30,6 +30,18 @@ function App() {
         <button className="start-button" onClick={handleStart}>
           Start
         </button>
+
+        <section className="seo-info">
+          <h2>About</h2>
+          <p>
+            ユークリッドリズム（ユークリディアンリズム / Euclidean Rhythm）は、数学的なアルゴリズムを用いて生成されるリズムのパターンです。
+            最大公約数を求める「ユークリッドの互除法」を応用した Bjorklund アルゴリズムにより、指定された数の拍を可能な限り均等に配置します。
+          </p>
+          <p>
+            このドラムマシンでは、16分音符や変拍子の中で数学的に美しいリズム構造を簡単に作成でき、
+            Tresillo, Cinquillo, Samba, Bembe など、世界中の伝統的な音楽に見られる特徴的なリズムパターンを視覚化して演奏することが可能です。
+          </p>
+        </section>
       </div>
     );
   }
