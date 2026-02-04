@@ -126,6 +126,7 @@ export function DrumMachine({ patchConnection }: DrumMachineProps) {
         ...track,
         steps: clampedSteps,
         pulses: Math.min(track.pulses, clampedSteps),
+        rotation: Math.max(0, Math.min(track.rotation, clampedSteps - 1)),
       }))
     );
   };

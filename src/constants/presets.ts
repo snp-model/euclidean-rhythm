@@ -23,7 +23,19 @@ export const RHYTHM_PRESETS: RhythmPreset[] = [
       { id: 1, pulses: 0, rotation: 0 }, 
       { id: 2, pulses: 8, rotation: 0 }, // HH: 8分刻み
       { id: 4, pulses: 2, rotation: 0 }, // Clap: バックビート的要素
-      { id: 7, pulses: 3, rotation: 0 }, // Cowbell: Tresillo pattern E(3,8)
+      { id: 7, pulses: 3, rotation: 3 }, // Cowbell: Tresillo pattern E(3,8)
+    ],
+  },
+  {
+    id: 'cinquillo',
+    name: 'Cinquillo (5,8)',
+    description: 'キューバのハバネラ、ダンソン。強い推進力。',
+    steps: 8,
+    tracks: [
+      { id: 0, pulses: 5, rotation: 0 }, // Kick: シンコペーション
+      { id: 2, pulses: 8, rotation: 0 }, // HH
+      { id: 6, pulses: 2, rotation: 1 }, // Rim
+      { id: 7, pulses: 5, rotation: 3 }, // Cowbell: Cinquillo E(5,8)
     ],
   },
   {
@@ -35,18 +47,6 @@ export const RHYTHM_PRESETS: RhythmPreset[] = [
       { id: 0, pulses: 1, rotation: 0 }, // Kick: 頭拍
       { id: 2, pulses: 5, rotation: 0 }, // HH: 5拍子刻み
       { id: 7, pulses: 2, rotation: 0 }, // Cowbell: E(2,5)
-    ],
-  },
-  {
-    id: 'cinquillo',
-    name: 'Cinquillo (5,8)',
-    description: 'キューバのハバネラ、ダンソン。強い推進力。',
-    steps: 8,
-    tracks: [
-      { id: 0, pulses: 5, rotation: 0 }, // Kick: シンコペーション
-      { id: 2, pulses: 8, rotation: 0 }, // HH
-      { id: 6, pulses: 3, rotation: 2 }, // Rim: Clave的
-      { id: 7, pulses: 5, rotation: 0 }, // Cowbell: Cinquillo E(5,8)
     ],
   },
   {
@@ -70,18 +70,18 @@ export const RHYTHM_PRESETS: RhythmPreset[] = [
       { id: 0, pulses: 4, rotation: 0 }, // Kick: 付点4分 (6/8の2拍)
       { id: 1, pulses: 0, rotation: 0 },
       { id: 5, pulses: 5, rotation: 0 }, // Tom
-      { id: 7, pulses: 7, rotation: 0 }, // Cowbell: Bembe E(7,12)
+      { id: 7, pulses: 7, rotation: 2 }, // Cowbell: Bembe E(7,12)
     ],
   },
   {
     id: 'macedonian',
-    name: 'Macedonian (5,13)',
+    name: 'Macedonian (6,13)',
     description: '素数周期の変拍子。',
     steps: 13,
     tracks: [
       { id: 0, pulses: 4, rotation: 0 }, // Kick
       { id: 2, pulses: 13, rotation: 0 }, // HH
-      { id: 7, pulses: 5, rotation: 0 }, // Cowbell
+      { id: 7, pulses: 6, rotation: 6 }, // Cowbell
     ],
   },
   {
@@ -90,10 +90,10 @@ export const RHYTHM_PRESETS: RhythmPreset[] = [
     description: 'ブラジルのサンバ。16ビート。',
     steps: 16,
     tracks: [
-      { id: 0, pulses: 4, rotation: 0 }, // Kick (Surdo pattern implies more, but E(4,16) gives solid beat)
+      { id: 0, pulses: 7, rotation: 7 }, // Kick
       { id: 1, pulses: 0, rotation: 0 },
       { id: 2, pulses: 16, rotation: 0 }, // Shaker-like
-      { id: 7, pulses: 9, rotation: 0 }, // Cowbell/Agogo
+      { id: 7, pulses: 9, rotation: 7 }, // Cowbell/Agogo
     ],
   },
 ];

@@ -6,5 +6,19 @@
     "description": "8-track Euclidean rhythm drum machine",
     "manufacturer": "Example",
     "category": "generator",
-    "source": "main.cmajor"
+    "source": "main.cmajor",
+
+    "externals":
+    {
+        "Techno::techno_samples": [
+            { "source": "samples/808/BD.ogg" },
+            { "source": "samples/808/SD.ogg" },
+            { "source": "samples/808/CH.ogg" },
+            { "source": "samples/808/OH.ogg" },
+            { "source": "samples/808/CP.ogg" },
+            { "source": "samples/808/LT.ogg" },
+            { "source": "samples/808/RS.ogg" },
+            { "source": "samples/808/CB.ogg" }
+        ]
+    }
 }
